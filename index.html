@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>手機噪音計</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app">
+    <h1>手機噪音計</h1>
+
+    <div class="db-card">
+      <div class="label">目前音量</div>
+      <div id="dbValue" class="db-value">-- dB</div>
+    </div>
+
+    <div class="dba-card">
+      <div class="label">A 加權響度</div>
+      <div id="dbaValue" class="dba-value">-- dB(A)</div>
+      <p>A-weighting </p>
+    </div>
+
+    <div class="stats">
+      <div>
+        <span>平均</span>
+        <strong id="avgDb">--</strong>
+      </div>
+      <div>
+        <span>最大</span>
+        <strong id="maxDb">--</strong>
+      </div>
+      <div>
+        <span>最小</span>
+        <strong id="minDb">--</strong>
+      </div>
+    </div>
+
+    <button id="startBtn">開始量測</button>
+    <button id="stopBtn" disabled>停止量測</button>
+
+    <p id="status">尚未開始</p>
+
+    <section class="octave-card">
+      <h2>八度音分析</h2>
+      <p class="section-desc"></p>
+
+      <div class="octave-list">
+        <div class="octave-row">
+          <span class="freq-label">31.5 Hz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="31.5"></div>
+          </div>
+          <span class="band-value" id="band-31.5">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">63 Hz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="63"></div>
+          </div>
+          <span class="band-value" id="band-63">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">125 Hz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="125"></div>
+          </div>
+          <span class="band-value" id="band-125">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">250 Hz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="250"></div>
+          </div>
+          <span class="band-value" id="band-250">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">500 Hz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="500"></div>
+          </div>
+          <span class="band-value" id="band-500">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">1 kHz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="1000"></div>
+          </div>
+          <span class="band-value" id="band-1000">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">2 kHz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="2000"></div>
+          </div>
+          <span class="band-value" id="band-2000">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">4 kHz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="4000"></div>
+          </div>
+          <span class="band-value" id="band-4000">--</span>
+        </div>
+
+        <div class="octave-row">
+          <span class="freq-label">8 kHz</span>
+          <div class="bar-bg">
+            <div class="bar" data-band="8000"></div>
+          </div>
+          <span class="band-value" id="band-8000">--</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="spectrogram-card">
+      <h2>時頻譜分析</h2>
+      <p class="section-desc">橫軸為時間，縱軸為頻率，顏色越亮代表能量越高</p>
+
+      <div class="spectrogram-area">
+        <div class="spectrogram-labels">
+          <span>高頻</span>
+          <span>低頻</span>
+        </div>
+        <canvas id="spectrogramCanvas" width="320" height="180"></canvas>
+      </div>
+
+      <div class="spectrogram-bottom-label">
+        <span>過去</span>
+        <span>現在</span>
+      </div>
+    </section>
+
+    <div class="note">
+      <p></p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
