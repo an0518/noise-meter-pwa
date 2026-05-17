@@ -19,7 +19,7 @@
     <div class="dba-card">
       <div class="label">A 加權響度</div>
       <div id="dbaValue" class="dba-value">-- dB(A)</div>
-      <p>A-weighting </p>
+      <p>A-weighting</p>
     </div>
 
     <div class="stats">
@@ -42,9 +42,28 @@
 
     <p id="status">尚未開始</p>
 
+    <section class="trend-card">
+      <h2>分貝時間趨勢圖</h2>
+      <p class="section-desc"></p>
+
+      <div class="trend-area">
+        <div class="trend-labels">
+          <span>120</span>
+          <span>60</span>
+          <span>0</span>
+        </div>
+        <canvas id="dbTrendCanvas" width="320" height="150"></canvas>
+      </div>
+
+      <div class="trend-bottom-label">
+        <span>過去</span>
+        <span>現在</span>
+      </div>
+    </section>
+
     <section class="octave-card">
       <h2>八度音分析</h2>
-      <p class="section-desc"></p>
+      <p class="section-desc">顯示不同頻率範圍的聲音能量</p>
 
       <div class="octave-list">
         <div class="octave-row">
@@ -140,7 +159,7 @@
     </section>
 
     <div class="note">
-      <p></p>
+      <p>說明：目前 dB 與 dB(A) 為手機麥克風估算值，未經專業分貝計校正。</p>
     </div>
   </div>
 

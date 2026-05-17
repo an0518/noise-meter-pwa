@@ -8,6 +8,9 @@ const avgDbText = document.getElementById("avgDb");
 const maxDbText = document.getElementById("maxDb");
 const minDbText = document.getElementById("minDb");
 
+const dbTrendCanvas = document.getElementById("dbTrendCanvas");
+const dbTrendCtx = dbTrendCanvas.getContext("2d");
+
 const spectrogramCanvas = document.getElementById("spectrogramCanvas");
 const spectrogramCtx = spectrogramCanvas.getContext("2d");
 
@@ -27,27 +30,22 @@ let minDb = Infinity;
 let totalDb = 0;
 let sampleCount = 0;
 
+let dbHistory = [];
+let lastTrendTime = 0;
 let lastSpectrogramTime = 0;
 
-// 校正值：目前是估算用
-// 如果整體數字太高，就改小，例如 95
-// 如果整體數字太低，就改大，例如 105
 const CALIBRATION_OFFSET = 100;
-
-// dB(A) 額外校正值
-// 如果 dB(A) 整體太高或太低，可以微調這個數字
 const A_WEIGHTING_OFFSET = 100;
 
-// 平滑係數：越接近 1，數字越穩，但反應越慢
 const SMOOTHING = 0.85;
 
-// 時頻譜更新間隔，單位 ms
-const SPECTROGRAM_INTERVAL = 50;
+const DB_TREND_INTERVAL = 100;
+const DB_TREND_MIN = 0;
+const DB_TREND_MAX = 120;
 
-// 時頻譜最高顯示頻率
+const SPECTROGRAM_INTERVAL = 50;
 const SPECTROGRAM_MAX_FREQ = 8000;
 
-// 八度音中心頻率
 const OCTAVE_BANDS = [
   31.5,
   63,
@@ -60,6 +58,7 @@ const OCTAVE_BANDS = [
   8000
 ];
 
+clearDbTrend();
 clearSpectrogram();
 
 startBtn.addEventListener("click", async () => {
@@ -87,8 +86,6 @@ startBtn.addEventListener("click", async () => {
     }
 
     analyser = audioContext.createAnalyser();
-
-    // fftSize 越大，頻率解析度越好
     analyser.fftSize = 4096;
     analyser.smoothingTimeConstant = 0.75;
     analyser.minDecibels = -100;
@@ -102,6 +99,7 @@ startBtn.addEventListener("click", async () => {
 
     resetStatistics();
     resetOctaveBars();
+    clearDbTrend();
     clearSpectrogram();
 
     startBtn.disabled = true;
@@ -109,7 +107,9 @@ startBtn.addEventListener("click", async () => {
 
     statusText.textContent = "量測中";
 
+    lastTrendTime = performance.now();
     lastSpectrogramTime = performance.now();
+
     updateMeasurement();
 
   } catch (error) {
@@ -151,6 +151,12 @@ function updateMeasurement() {
   updateOctaveBands();
 
   const now = performance.now();
+
+  if (now - lastTrendTime >= DB_TREND_INTERVAL) {
+    updateDbTrend(smoothedDb);
+    lastTrendTime = now;
+  }
+
   if (now - lastSpectrogramTime >= SPECTROGRAM_INTERVAL) {
     updateSpectrogram();
     lastSpectrogramTime = now;
@@ -204,7 +210,6 @@ function calculateAWeightedDb() {
 
     const aCorrection = getAWeightingCorrection(freq);
     const weightedDb = rawDb + aCorrection;
-
     const linearEnergy = Math.pow(10, weightedDb / 10);
 
     weightedEnergySum += linearEnergy;
@@ -237,7 +242,6 @@ function getAWeightingCorrection(freq) {
     (f2 + Math.pow(12200, 2));
 
   const ra = raNumerator / raDenominator;
-
   const a = 20 * Math.log10(ra) + 2.0;
 
   if (!isFinite(a)) {
@@ -268,6 +272,82 @@ function updateDbDisplay(db, dba) {
   avgDbText.textContent = avgDb.toFixed(1);
   maxDbText.textContent = maxDb.toFixed(1);
   minDbText.textContent = minDb.toFixed(1);
+}
+
+function updateDbTrend(db) {
+  dbHistory.push(db);
+
+  const maxPoints = dbTrendCanvas.width;
+
+  if (dbHistory.length > maxPoints) {
+    dbHistory.shift();
+  }
+
+  drawDbTrend();
+}
+
+function drawDbTrend() {
+  const width = dbTrendCanvas.width;
+  const height = dbTrendCanvas.height;
+
+  dbTrendCtx.fillStyle = "#020617";
+  dbTrendCtx.fillRect(0, 0, width, height);
+
+  drawTrendGrid(width, height);
+
+  if (dbHistory.length < 2) {
+    return;
+  }
+
+  dbTrendCtx.beginPath();
+  dbTrendCtx.strokeStyle = "#ef4444";
+  dbTrendCtx.lineWidth = 2;
+
+  for (let i = 0; i < dbHistory.length; i++) {
+    const db = Math.max(DB_TREND_MIN, Math.min(DB_TREND_MAX, dbHistory[i]));
+
+    const x = (i / (dbHistory.length - 1)) * width;
+    const y = height - ((db - DB_TREND_MIN) / (DB_TREND_MAX - DB_TREND_MIN)) * height;
+
+    if (i === 0) {
+      dbTrendCtx.moveTo(x, y);
+    } else {
+      dbTrendCtx.lineTo(x, y);
+    }
+  }
+
+  dbTrendCtx.stroke();
+}
+
+function drawTrendGrid(width, height) {
+  dbTrendCtx.strokeStyle = "#334155";
+  dbTrendCtx.lineWidth = 1;
+
+  for (let i = 0; i <= 4; i++) {
+    const y = (height / 4) * i;
+    dbTrendCtx.beginPath();
+    dbTrendCtx.moveTo(0, y);
+    dbTrendCtx.lineTo(width, y);
+    dbTrendCtx.stroke();
+  }
+
+  for (let i = 0; i <= 4; i++) {
+    const x = (width / 4) * i;
+    dbTrendCtx.beginPath();
+    dbTrendCtx.moveTo(x, 0);
+    dbTrendCtx.lineTo(x, height);
+    dbTrendCtx.stroke();
+  }
+}
+
+function clearDbTrend() {
+  dbHistory = [];
+  const width = dbTrendCanvas.width;
+  const height = dbTrendCanvas.height;
+
+  dbTrendCtx.fillStyle = "#020617";
+  dbTrendCtx.fillRect(0, 0, width, height);
+  drawTrendGrid(width, height);
 }
 
 function updateOctaveBands() {
@@ -302,7 +382,6 @@ function updateOctaveBands() {
       bandDb = 10 * Math.log10(energySum / count);
     }
 
-    // 將 -100 ~ -20 dB 轉成 0% ~ 100%
     let percent = ((bandDb + 100) / 80) * 100;
     percent = Math.max(0, Math.min(100, percent));
 
@@ -446,5 +525,6 @@ function stopMeasurement() {
   dbaValue.textContent = "-- dB(A)";
 
   resetOctaveBars();
+  clearDbTrend();
   clearSpectrogram();
 }
